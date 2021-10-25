@@ -1,0 +1,108 @@
+import React from "react";
+import axios from 'axios';
+
+class Inference extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      
+      courses: [],
+      course: ""
+    };
+    this.handleChangeCourse = this.handleChangeCourse.bind(this);
+  }
+
+
+
+  handleChange = event => {
+    this.setState({ value: event.target.value });
+  };
+
+  handleChangeCourse = event => {
+    this.setState({ course: event.target.value });
+  };
+
+  getUnique(arr, comp) {
+    const unique = arr
+      //store the comparison values in array
+      .map(e => e[comp])
+
+      // store the keys of the unique objects
+      .map((e, i, final) => final.indexOf(e) === i && i)
+
+      // eliminate the dead keys & store unique objects
+      .filter(e => arr[e])
+
+      .map(e => arr[e]);
+
+    return unique;
+  }
+  handleSubmit(event) {
+    event.preventDefault();
+    axios.post('http://localhost:5000/getmodell', {
+      dataset:this.state.course
+    })
+     .then((res) => {
+      // Res.data is the response from your server
+      console.log(res.data);
+    });
+  }
+
+  componentDidMount() {
+    
+    axios.get('http://localhost:5000/files')
+        .then(response => this.setState({ courses: response.data }));
+}
+
+  render() {
+
+
+    const uniqueCouse = this.getUnique(this.state.courses, "dataset");
+
+    const courses = this.state.courses;
+    const course = this.state.course;
+
+    const filterDropdown = courses.filter(function(result) {
+      return result.dataset === course;
+    });
+
+    return (
+      <div>
+        <form onSubmit={this.handleSubmit.bind(this)}>
+          <label>
+            Looping through Courses tag from Json File
+            <select
+              value={this.state.course}
+              onChange={this.handleChangeCourse}
+            >
+              {uniqueCouse.map(course => (
+                <option key={course.id} value={course.dataset}>
+                  {course.dataset}
+                </option>
+              ))}
+            </select>
+          </label>
+          <button
+                  type="submit"
+                  class="btn"
+                  style={{ marginTop: "" }}
+                >
+                  ok
+                </button>
+          
+          <div>
+            {filterDropdown.map(course => (
+              <div key={course.id} style={{ margin: "10px" }}>
+                
+                <img src={`${course.path}`} height="80" className="card-img-top img-responsive" alt="img"/>
+                <br />
+              </div>
+            ))}
+          </div>
+        </form>
+      </div>
+    );
+  }
+}
+
+export default Inference;
